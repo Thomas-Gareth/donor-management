@@ -14,7 +14,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+export const db = getFirestore(app);
 export const auth = getAuth(app);
 
 
@@ -25,4 +25,4 @@ signInAnonymously(auth)
   })
   .catch((error) => console.error("Auth error:", error));
 
-export { db };
+
