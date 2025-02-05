@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import DonorManagement from "./components/DonorManagement";
 import CampaignTracking from './components/CampaignTracking'
+import ImpactDashboard from "./components/ImpactDashbaord";
 import { AppBar, Toolbar, Button } from "@mui/material";
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
             <Routes>
                 <Route path="/" element={<DonorManagement />} />
                 <Route path="/campaigns" element={<CampaignTracking />} />
+                <Route path="/impact" element={<ImpactDashboard />} />
             </Routes>
         </Router>
     );
