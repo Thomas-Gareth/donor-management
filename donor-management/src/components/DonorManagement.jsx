@@ -6,7 +6,6 @@ import {
     TableHead, TableRow, Paper, IconButton, Box 
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
@@ -40,11 +39,34 @@ function DonorManagement() {
     };
 
     const generateCSVReport = (data, filename = 'donor_report') => {
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Donors');
-        
-        XLSX.writeFile(workbook, `${filename}.csv`);
+        // Convert donors to CSV
+        const headers = ['Name', 'Email', 'Phone', 'Total Donations'];
+        const csvData = data.map(donor => [
+            donor.name, 
+            donor.email, 
+            donor.phone, 
+            donor.totalDonations || 0
+        ]);
+
+        // Combine headers and data
+        const csvContent = [
+            headers,
+            ...csvData
+        ].map(e => e.map(String).map(v => v.replace(/"/g, '""')).map(v => `"${v}"`).join(","))
+        .join("\n");
+
+        // Create and download CSV file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${filename}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     };
 
     const generatePDFReport = async (filename = 'donor_report') => {
