@@ -4,9 +4,10 @@ import { getDonors } from '../services/DonorService';
 import { 
     Container, Grid, Paper, Typography, Box, LinearProgress,
     Card, CardContent, CardHeader, FormControl, Select, MenuItem,
-    InputLabel
+    InputLabel, List, ListItem, ListItemText, ListItemAvatar, Avatar
 } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Trophy } from 'lucide-react';
 
 function ImpactDashboard() {
     const [metrics, setMetrics] = useState({
@@ -20,6 +21,7 @@ function ImpactDashboard() {
     const [yearFilter, setYearFilter] = useState(new Date().getFullYear());
     const [monthFilter, setMonthFilter] = useState(new Date().getMonth());
     const [availableYears, setAvailableYears] = useState([]);
+    const [topDonors, setTopDonors] = useState([]);
 
     useEffect(() => {
         fetchData();
@@ -34,6 +36,12 @@ function ImpactDashboard() {
         
         const totalFunds = filteredCampaigns.reduce((sum, campaign) => 
             sum + (campaign.fundsRaised || 0), 0);
+
+        // Process top donors
+        const sortedDonors = [...filteredDonors]
+            .sort((a, b) => (b.totalDonations || 0) - (a.totalDonations || 0))
+            .slice(0, 5);
+        setTopDonors(sortedDonors);
         
         setMetrics({
             totalDonors: filteredDonors.length,
@@ -70,6 +78,15 @@ function ImpactDashboard() {
                     return true;
             }
         });
+    };
+
+    const getColor = (index) => {
+        switch (index) {
+            case 0: return '#FFD700'; // Gold
+            case 1: return '#C0C0C0'; // Silver
+            case 2: return '#CD7F32'; // Bronze
+            default: return '#1976d2'; // Default blue
+        }
     };
 
     const monthNames = [
@@ -169,23 +186,62 @@ function ImpactDashboard() {
                 </Grid>
             </Grid>
 
-            {/* Campaign Progress Chart */}
-            <Paper sx={{ p: 2, mb: 4 }}>
-                <Typography variant="h6" gutterBottom>
-                    Campaign Progress
-                </Typography>
-                <Box sx={{ height: 400 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={campaignProgress}>
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="raised" fill="#1976d2" name="Funds Raised" />
-                            <Bar dataKey="goal" fill="#e0e0e0" name="Goal" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </Box>
-            </Paper>
+            {/* Campaign Progress and Top Donors */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} md={8}>
+                    <Paper sx={{ p: 2 }}>
+                        <Typography variant="h6" gutterBottom>
+                            Campaign Progress
+                        </Typography>
+                        <Box sx={{ height: 400 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={campaignProgress}>
+                                    <XAxis dataKey="name" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Bar dataKey="raised" fill="#1976d2" name="Funds Raised" />
+                                    <Bar dataKey="goal" fill="#e0e0e0" name="Goal" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </Box>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                    <Paper sx={{ p: 2, height: '100%' }}>
+                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Trophy size={24} />
+                            Top Donors
+                        </Typography>
+                        <List>
+                            {topDonors.map((donor, index) => (
+                                <ListItem
+                                    key={donor.id}
+                                    sx={{
+                                        borderRadius: 1,
+                                        mb: 1,
+                                        backgroundColor: index < 3 ? `${getColor(index)}15` : 'transparent'
+                                    }}
+                                >
+                                    <ListItemAvatar>
+                                        <Avatar sx={{ bgcolor: getColor(index) }}>
+                                            {donor.name?.charAt(0) || '?'}
+                                        </Avatar>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={donor.name}
+                                        secondary={`Total Donations: $${donor.totalDonations?.toLocaleString() || 0}`}
+                                    />
+                                </ListItem>
+                            ))}
+                            {topDonors.length === 0 && (
+                                <Box sx={{ textAlign: 'center', py: 2, color: 'text.secondary' }}>
+                                    <Typography variant="body2">No donor data available</Typography>
+                                </Box>
+                            )}
+                        </List>
+                    </Paper>
+                </Grid>
+            </Grid>
 
             {/* Campaign Details */}
             <Grid container spacing={3}>
